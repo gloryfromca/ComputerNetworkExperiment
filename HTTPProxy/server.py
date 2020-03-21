@@ -1,21 +1,9 @@
 from flask import Flask, request, Response
 import requests
-import gzip
-import io
+from utils import ENABLE_HTTP_1_1
 
-# app run使用Response默认用HTTP 1.0, 需要修改为HTTP 1.1, 不然无法支持转发chunked的http请求
-from http.server import BaseHTTPRequestHandler
-BaseHTTPRequestHandler.protocol_version = "HTTP/1.1"
 
 http_proxy = Flask(__name__)
-
-
-def gz_decode(data):
-    # 用来解压gzip
-    compressed_stream = io.BytesIO(data)
-    gziper = gzip.GzipFile(fileobj=compressed_stream)
-    data2 = gziper.read()
-    return data2
 
 
 @http_proxy.route("/", defaults={"path": ""}, methods=["GET", "POST"])

@@ -1,7 +1,7 @@
 import socket
 from socketserver import ThreadingTCPServer
 from http.server import BaseHTTPRequestHandler
-from utils import exchange_data
+from utils import exchange_data, ENABLE_HTTP_1_1
 
 
 class HTTPTunnelRequestHandler(BaseHTTPRequestHandler):
