@@ -20,3 +20,12 @@ Reference:
 * https://www.cnblogs.com/lilinwei340/p/7227579.html
 * https://imququ.com/post/web-proxy.html
 * https://blog.csdn.net/handsomekang/article/details/39347357
+
+
+### HTTP Tunnel    
+#    
+Simple Demo for HTTP Tunnel   
+#    
+Reference:    
+* https://imququ.com/post/web-proxy.html
+* http.server.BaseHTTPRequestHandler

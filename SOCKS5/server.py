@@ -1,9 +1,9 @@
-import select
 import socket
 import struct
 from socketserver import StreamRequestHandler, ThreadingTCPServer
 
 from SOCKS5 import exceptions
+from utils import exchange_data
 
 
 class SOCKS5RequestHandler(StreamRequestHandler):
@@ -25,6 +25,7 @@ class SOCKS5RequestHandler(StreamRequestHandler):
         address = self.parse_address(address_type)
         port = struct.unpack('!H', self.connection.recv(2))[0]
 
+        remote = None
         try:
             if cmd == 1:
                 remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -41,21 +42,9 @@ class SOCKS5RequestHandler(StreamRequestHandler):
             reply = self.reply_failed(address_type, 5)
         self.connection.sendall(reply)
 
-        if reply[1] == 0 and cmd == 1:
-            self.exchange_data(self.connection, remote)
+        if remote and reply[1] == 0:
+            exchange_data(self.connection, remote)
         self.server.close_request(self.request)
-
-    def exchange_data(self, client, remote):
-        while True:
-            rs, ws, es = select.select([client, remote], [], [])
-            if client in rs:
-                data = client.recv(4096)
-                if remote.send(data) <= 0:
-                    break
-            if remote in rs:
-                data = remote.recv(4096)
-                if client.send(data) <= 0:
-                    break
 
     def reply_failed(self, address_type, error_number):
         return struct.pack("!BBBBIH", self.SOCKS_VERSION, error_number, 0, address_type, 0, 0)
@@ -64,7 +53,7 @@ class SOCKS5RequestHandler(StreamRequestHandler):
         if address_type == 1:
             address = socket.inet_ntoa(self.connection.recv(4))
         elif address_type == 3:
-            domain_length = ord(self.connection.recv(1)[0])
+            domain_length = ord(self.connection.recv(1))
             address = self.connection.recv(domain_length).decode("ascii")
         else:
             raise exceptions.UnsupportedAddressFormat()
@@ -83,5 +72,7 @@ class SOCKS5RequestHandler(StreamRequestHandler):
 
 if __name__ == "__main__":
     # PYTHONPATH=. python SOCKS5/server.py
+    # curl -v --socks5 127.0.0.1:2019 https://www.baidu.com
+    # chrome中使用SwitchyOmega插件不work，但是firefox设置代理之后很work，可能是协议实现不全
     server = ThreadingTCPServer(('0.0.0.0', 2019), SOCKS5RequestHandler)
     server.serve_forever()
